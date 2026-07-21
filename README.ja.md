@@ -25,7 +25,7 @@ macOS 向けの軽量スクリーンショットツール。範囲キャプチ�
 ```sh
 git clone <this-repo>
 cd nice-shot
-./build.sh          # swift build + .app バンドル生成 + コード署名
+./build.sh # swift build + .app バンドル生成 + コード署名
 open NiceShot.app
 ```
 

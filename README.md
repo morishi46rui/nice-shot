@@ -25,7 +25,7 @@ A lightweight screenshot tool for macOS. Capture a region → annotate → copy 
 ```sh
 git clone <this-repo>
 cd nice-shot
-./build.sh          # swift build + assemble the .app bundle + code sign
+./build.sh # swift build + assemble the .app bundle + code sign
 open NiceShot.app
 ```
 
