@@ -1,0 +1,15 @@
+# Swift Package Manager
+/.build/
+.swiftpm/
+Package.resolved
+
+# ビルド成果物（.app バンドルは build.sh で生成）
+/NiceShot.app/
+*.app
+
+# macOS
+.DS_Store
+
+# Xcode（もし使う場合）
+xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
