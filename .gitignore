@@ -7,6 +7,9 @@ Package.resolved
 /NiceShot.app/
 *.app
 
+# ローカルの署名証明書ピン留め（個人の証明書 SHA1 なので共有しない）
+.signing-identity
+
 # macOS
 .DS_Store
 

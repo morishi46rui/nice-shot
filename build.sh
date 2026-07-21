@@ -22,9 +22,23 @@ cp "$BUILD_DIR/NiceShot" "$APP/Contents/MacOS/NiceShot"
 cp "Resources/Info.plist" "$APP/Contents/Info.plist"
 
 # TCC（画面収録の許可）はコード署名の identity に紐づく。
-# adhoc 署名はビルドごとに cdhash が変わり許可が無効化されるため、
-# 安定した署名証明書（Apple Development / Developer ID）があればそれで署名する。
-IDENTITY="${SIGN_IDENTITY:-$(security find-identity -v -p codesigning 2>/dev/null | awk '/Apple Development|Developer ID/ {print $2; exit}')}"
+# ビルドごとに署名 identity が変わると許可が無効化されるため、使う証明書を1つに固定する。
+# 優先順位: 環境変数 SIGN_IDENTITY > .signing-identity ファイル > 自動検出（先頭）
+IDENTITY="${SIGN_IDENTITY:-}"
+if [ -z "$IDENTITY" ] && [ -f "$ROOT/.signing-identity" ]; then
+    IDENTITY="$(grep -vE '^[[:space:]]*(#|$)' "$ROOT/.signing-identity" | head -1 | tr -d '[:space:]')"
+fi
+if [ -z "$IDENTITY" ]; then
+    CERTS="$(security find-identity -v -p codesigning 2>/dev/null | grep -E 'Apple Development|Developer ID' || true)"
+    COUNT="$(printf '%s\n' "$CERTS" | grep -c . || true)"
+    IDENTITY="$(printf '%s\n' "$CERTS" | awk '{print $2; exit}')"
+    if [ "${COUNT:-0}" -gt 1 ]; then
+        echo "⚠️  署名証明書が複数あります。TCC(画面収録)の許可を安定させるには使う証明書を固定してください:"
+        echo "    security find-identity -v -p codesigning   # SHA1 を確認"
+        echo "    echo <SHA1> > .signing-identity            # 1つに固定（gitには含まれません）"
+    fi
+fi
+
 if [ -n "$IDENTITY" ]; then
     echo "==> 署名 (identity: $IDENTITY)"
     codesign --force --sign "$IDENTITY" "$APP"
