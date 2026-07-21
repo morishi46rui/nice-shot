@@ -1,56 +1,69 @@
 # NiceShot
 
-macOS 向けの軽量スクリーンショットツール。範囲キャプチャ → 注釈 → コピー / 保存 / ピン留め をメニューバーから素早く行えます。Shottr ライクな使い勝手を Swift ネイティブ（AppKit + ScreenCaptureKit）で実装しています。
+**English** | [日本語](README.ja.md)
 
-## 特長
+A lightweight screenshot tool for macOS. Capture a region → annotate → copy / save / pin, all quickly from the menu bar. A Shottr-like workflow implemented natively in Swift (AppKit + ScreenCaptureKit).
 
-- **メニューバー常駐** ＋ カスタマイズ可能なグローバルホットキー（デフォルト ⌥⇧4）
-- **範囲選択キャプチャ**（ドラッグ選択・寸法表示、HiDPI / マルチモニタ対応）
-- **注釈エディタ**
-  - 矢印 / 四角 / 楕円 / 直線 / フリーハンド / テキスト / ぼかし（ピクセレート）
-  - 色・線幅の変更、Undo（⌘Z）
-  - 描画後は自動で選択ツールへ切り替わり、そのまま**移動・リサイズ**（角＋辺ハンドル、Shift で縦横比固定 / 45°スナップ、Delete で削除）
-- **書き出し**：クリップボードコピー（⌘C）／ PNG 保存（⌘S）／ 画面ピン留め（⌘P、フローティング表示）
-- ショートカットは設定画面から自由に変更・永続化
+## Features
 
-## 動作環境
+- **Menu bar app** with a customizable global hotkey (default ⌥⇧4)
+- **Region capture** (drag to select, live dimensions, HiDPI / multi-monitor aware)
+- **Annotation editor**
+  - Arrow / rectangle / ellipse / line / freehand / text / blur (pixelate)
+  - Color & line width, undo (⌘Z)
+  - After drawing, it auto-switches to the select tool so you can immediately **move & resize** (corner + edge handles, Shift to lock aspect ratio / snap to 45°, Delete to remove)
+- **Export**: copy to clipboard (⌘C) / save as PNG (⌘S) / pin to screen (⌘P, floating window)
+- Hotkey is configurable from the preferences window and persisted
 
-- macOS 14 (Sonoma) 以降
-- Swift 6 / Xcode 16 以降（ビルド時）
+## Requirements
 
-## ビルドと実行
+- macOS 14 (Sonoma) or later
+- Swift 6 / Xcode 16 or later (to build)
+
+## Build & Run
 
 ```sh
 git clone <this-repo>
 cd nice-shot
-./build.sh          # swift build + .app バンドル生成 + コード署名
+./build.sh          # swift build + assemble the .app bundle + code sign
 open NiceShot.app
 ```
 
-`build.sh` は `security find-identity` で見つかった署名証明書（Apple Development / Developer ID）で自動署名します。証明書が無ければ ad-hoc 署名にフォールバックします。特定の証明書を使いたい場合は環境変数で指定できます。
+`build.sh` signs the app with a code-signing certificate found via `security find-identity`
+(Apple Development / Developer ID). If none is found, it falls back to ad-hoc signing.
+To use a specific certificate:
 
 ```sh
 SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./build.sh
 ```
 
-## 権限（画面収録）
+## Permissions (Screen Recording)
 
-初回キャプチャ時に画面収録の許可を求められます。**システム設定 → プライバシーとセキュリティ → 画面収録** で NiceShot を有効にしてください。
+On the first capture, macOS will ask for Screen Recording permission. Enable NiceShot under
+**System Settings → Privacy & Security → Screen Recording**.
 
-> ⚠️ ad-hoc 署名だとビルドのたびに許可がリセットされます。安定した署名証明書で署名すると、再ビルドしても許可が維持されます（TCC が署名の identity に紐づくため）。
+> ⚠️ With ad-hoc signing, the permission resets on every rebuild. Signing with a stable
+> certificate keeps the grant across rebuilds, because TCC ties the permission to the signing
+> identity.
 
-## ショートカットの変更
+## Changing the Hotkey
 
-メニューバーのアイコン → **「ショートカットを設定…」**（⌘,）から変更できます。
+Open the menu bar icon → **"ショートカットを設定… (Configure Shortcut)"** (⌘,).
 
-`⌘⇧4` など macOS 標準のスクリーンショットと重なるキーを使う場合は、**システム設定 → キーボード → キーボードショートカット → スクリーンショット** で該当する OS 側のショートカットをオフにしてください。
+If you use a combo that collides with a macOS default screenshot shortcut (e.g. `⌘⇧4`), turn off
+the matching OS shortcut under **System Settings → Keyboard → Keyboard Shortcuts → Screenshots**.
 
-## 実装メモ
+## Implementation Notes
 
-- キャプチャは `ScreenCaptureKit`（`SCScreenshotManager`）。切り抜き倍率は `NSScreen` のポイントサイズと実キャプチャ画素数から算出し、HiDPI スケーリングやマルチモニタ混在でもズレないようにしています。
-- グローバルホットキーは Carbon の `RegisterEventHotKey` を使用（アクセシビリティ権限不要）。
-- 斜めリサイズカーソルは公開 API に無いため、AppKit の非公開カーソルを利用し、取得できない場合は縦横リサイズカーソルにフォールバックします（`ResizeCursors.swift`）。**この非公開 API 使用のため Mac App Store 申請は通りません。** GitHub 公開・自前配布は問題ありません。
+- Capture uses `ScreenCaptureKit` (`SCScreenshotManager`). The crop scale is derived from the
+  `NSScreen` point size and the actual captured pixel dimensions, so it stays correct under HiDPI
+  scaling and mixed multi-monitor setups.
+- The global hotkey uses Carbon's `RegisterEventHotKey` (no Accessibility permission required).
+- Diagonal resize cursors are not in the public API, so AppKit's private cursors are used with a
+  fallback to horizontal/vertical resize cursors (`ResizeCursors.swift`). **Because of this private
+  API usage, the app cannot be submitted to the Mac App Store.** Distributing via GitHub / directly
+  is fine.
 
-## ライセンス
+## License
 
 [MIT](LICENSE)
